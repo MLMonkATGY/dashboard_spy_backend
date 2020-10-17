@@ -47,13 +47,13 @@ public class RestService {
 
     public String resetMotionDetectionHardware() {
 
-        String offUri = String.format("http://192.168.1.3:8080/settings/motion_detect?set=off");
+        String offUri = String.format("http://192.168.1.5:8080/settings/motion_detect?set=off");
         RequestHeadersSpec<?> requestSpec1 = WebClient.create().get().uri(URI.create(offUri));
 
-        String response1 = requestSpec1.exchange().block().bodyToMono(String.class).block();
-        String onUri = String.format("http://192.168.1.3:8080/settings/motion_detect?set=on");
+        String response1 = requestSpec1.retrieve().bodyToMono(String.class).block();
+        String onUri = String.format("http://192.168.1.5:8080/settings/motion_detect?set=on");
         RequestHeadersSpec<?> requestSpec2 = WebClient.create().get().uri(URI.create(onUri));
-        String response2 = requestSpec2.exchange().block().bodyToMono(String.class).block();
+        String response2 = requestSpec2.retrieve().bodyToMono(String.class).block();
 
         return response2;
     }
@@ -66,10 +66,10 @@ public class RestService {
             flashLightCommand = "enable";
 
         }
-        String absUri = String.format("http://192.168.1.3:8080/%storch", flashLightCommand);
+        String absUri = String.format("http://192.168.1.5:8080/%storch", flashLightCommand);
         RequestHeadersSpec<?> requestSpec2 = WebClient.create().get().uri(URI.create(absUri));
 
-        String response = requestSpec2.exchange().block().bodyToMono(String.class).block();
+        String response = requestSpec2.retrieve().bodyToMono(String.class).block();
 
         return response;
     }
@@ -92,7 +92,7 @@ public class RestService {
         RequestHeadersSpec<?> requestSpec2 = WebClient.create().post().uri(URI.create(absUri))
                 .body(BodyInserters.fromValue(req));
 
-        String response = requestSpec2.exchange().block().bodyToMono(String.class).block();
+        String response = requestSpec2.retrieve().bodyToMono(String.class).block();
 
         return response;
     }
