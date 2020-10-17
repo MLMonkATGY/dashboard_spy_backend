@@ -1,0 +1,110 @@
+package com.local.dashspybackend.Task;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.text.SimpleDateFormat;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Scanner;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.local.dashspybackend.DTO.BroadcastDiscoveryRespDTO;
+import com.local.dashspybackend.DTO.DeviceInfoCreateReqDTO;
+import com.local.dashspybackend.Service.SonoffListenerService;
+import com.local.dashspybackend.Singleton.MockCacheData;
+import com.local.dashspybackend.Util.ParseJSON;
+
+import org.modelmapper.ModelMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.EventListener;
+import org.springframework.core.task.TaskExecutor;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.converter.MappingJackson2MessageConverter;
+import org.springframework.messaging.simp.stomp.StompSession;
+import org.springframework.messaging.simp.stomp.StompSessionHandler;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClient.ResponseSpec;
+import org.springframework.web.socket.client.WebSocketClient;
+import org.springframework.web.socket.client.WebSocketConnectionManager;
+import org.springframework.web.socket.client.standard.StandardWebSocketClient;
+import org.springframework.web.socket.messaging.WebSocketStompClient;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+@Component
+public class BroadcastDeviceDiscovery {
+
+    @Autowired
+    private TaskExecutor taskExecutor;
+    @Autowired
+    private SonoffListenerService service;
+    private final RestTemplate restTemplate;
+    private int isFound;
+
+    @Autowired
+    private ObjectMapper modelMapper;
+
+    @Autowired
+    private ParseJSON parser;
+
+    public BroadcastDeviceDiscovery(RestTemplateBuilder restTemplateBuilder) {
+        this.restTemplate = restTemplateBuilder.build();
+        this.isFound = 0;
+    }
+
+    public Map<String, String> getPostsPlainJSON(String ip4) {
+        String currentIp = "http://192.168.1." + ip4;
+        String currentPort = "7878";
+
+        String url = currentIp + ":" + currentPort;
+        RestTemplate restTemplate = new RestTemplate();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+
+        HttpEntity<String> entity = new HttpEntity<>("body", headers);
+
+        var resp = restTemplate.exchange(url, HttpMethod.GET, entity, Map.class);
+
+        return resp.getBody();
+    }
+
+    public Mono<String> asyncGetDeviceInfo(String ip4) {
+        String currentIp = "http://192.168.1." + ip4;
+        String currentPort = "7878";
+
+        String url = currentIp + ":" + currentPort;
+        var tweetFlux = WebClient.create()
+
+                .get().uri(url).accept(MediaType.APPLICATION_JSON).retrieve().bodyToMono(String.class);
+        tweetFlux.subscribe(resp -> {
+            BroadcastDiscoveryRespDTO data = parser.parse(resp, BroadcastDiscoveryRespDTO.class);
+            System.out.println(data);
+
+        });
+        return tweetFlux;
+    }
+
+    @EventListener
+    @Async
+    public void listen(ContextRefreshedEvent event) {
+        this.asyncGetDeviceInfo("7");
+        // System.out.println(reponse);
+    }
+
+}
