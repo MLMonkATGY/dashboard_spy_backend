@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Scanner;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -36,6 +37,7 @@ import org.springframework.messaging.simp.stomp.StompSession;
 import org.springframework.messaging.simp.stomp.StompSessionHandler;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClient.ResponseSpec;
@@ -62,49 +64,92 @@ public class BroadcastDeviceDiscovery {
 
     @Autowired
     private ParseJSON parser;
+    private RestTemplateBuilder aaaaa;
+    public int currentNum;
 
     public BroadcastDeviceDiscovery(RestTemplateBuilder restTemplateBuilder) {
         this.restTemplate = restTemplateBuilder.build();
+        this.aaaaa = restTemplateBuilder;
         this.isFound = 0;
+        this.currentNum = 0;
     }
 
-    public Map<String, String> getPostsPlainJSON(String ip4) {
+    public class InnerBroadcastDeviceDiscovery implements Runnable {
+        public void run() {
+            var i = BroadcastDeviceDiscovery.this.currentNum++;
+            System.out.println(i);
+            // BroadcastDeviceDiscovery.this.getPostsPlainJSON(Integer.toString(i));
+        }
+
+    }
+
+    @Async
+    public void testThread() {
+        System.out.println("ahah");
+    }
+
+    @Async
+    public void getPostsPlainJSON(String ip4, RestTemplateBuilder restTemplateBuilder) {
         String currentIp = "http://192.168.1." + ip4;
         String currentPort = "7878";
 
         String url = currentIp + ":" + currentPort;
-        RestTemplate restTemplate = new RestTemplate();
+        RestTemplate restTemplate = restTemplateBuilder.build();
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
 
         HttpEntity<String> entity = new HttpEntity<>("body", headers);
+        try {
+            var resp = restTemplate.exchange(url, HttpMethod.GET, entity, Map.class);
+            var b = resp.getBody();
+            System.out.println(b.toString());
+        } catch (Exception e) {
+            // TODO: handle exception
+        }
 
-        var resp = restTemplate.exchange(url, HttpMethod.GET, entity, Map.class);
-
-        return resp.getBody();
+        // return b;
     }
 
-    public Mono<String> asyncGetDeviceInfo(String ip4) {
+    public void asyncGetDeviceInfo(String ip4) {
         String currentIp = "http://192.168.1." + ip4;
         String currentPort = "7878";
 
         String url = currentIp + ":" + currentPort;
-        var tweetFlux = WebClient.create()
+        try {
+            Mono<String> tweetFlux = WebClient.create()
 
-                .get().uri(url).accept(MediaType.APPLICATION_JSON).retrieve().bodyToMono(String.class);
-        tweetFlux.subscribe(resp -> {
-            BroadcastDiscoveryRespDTO data = parser.parse(resp, BroadcastDiscoveryRespDTO.class);
-            System.out.println(data);
+                    .get().uri(url).accept(MediaType.APPLICATION_JSON).retrieve().bodyToMono(String.class);
+            tweetFlux.subscribe(resp -> {
+                BroadcastDiscoveryRespDTO data = parser.parse(resp, BroadcastDiscoveryRespDTO.class);
+                System.out.println(data);
 
-        });
-        return tweetFlux;
+            }, err -> {
+                System.err.println("CAUGHT " + err.getMessage());
+            });
+
+        } catch (Exception e) {
+            // TODO: handle exception
+        }
     }
 
     @EventListener
-    @Async
     public void listen(ContextRefreshedEvent event) {
-        this.asyncGetDeviceInfo("7");
-        // System.out.println(reponse);
+        for (int i = 2; i < 200; i++) {
+            try {
+                // taskExecutor.execute(new InnerBroadcastDeviceDiscovery());
+                this.asyncGetDeviceInfo(Integer.toString(i));
+
+                // this.getPostsPlainJSON(Integer.toString(i), this.aaaaa);
+                // testThread();
+                // System.out.println(i);
+            } catch (Exception e) {
+                // TODO: handle exception
+            }
+            System.out.println(i);
+
+        }
+        System.out.println("all done");
+
     }
 
 }

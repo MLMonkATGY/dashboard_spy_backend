@@ -30,36 +30,38 @@ public class MockCacheData {
 
     @Autowired
     private IDeviceInfoRepo repo;
-    @Autowired
-    private WebSocketConnectionManager socketManager;
+
     @PostConstruct
-    public void getCache(){
+    public void getCache() {
         this.unclaimedDeviceList = new ConcurrentLinkedQueue<>();
         this.currentDeviceState = new ConcurrentHashMap<>();
         this.lastTriggeredTime = new ConcurrentHashMap<>();
-        List<DeviceInfoEntity>allDevices = repo.findAll();
+        List<DeviceInfoEntity> allDevices = repo.findAll();
         new Timestamp(System.currentTimeMillis());
-        for ( DeviceInfoEntity device: allDevices) {
+        for (DeviceInfoEntity device : allDevices) {
             Timestamp currentTimeStamp = new Timestamp(System.currentTimeMillis());
             this.unclaimedDeviceList.add(device);
             currentDeviceState.put(device.getDeviceId(), device);
-            lastTriggeredTime.put(device.getDeviceId(), currentTimeStamp.getTime()
-            );
+            lastTriggeredTime.put(device.getDeviceId(), currentTimeStamp.getTime());
 
         }
 
     }
-    public DeviceInfoEntity getDevice(){
+
+    public DeviceInfoEntity getDevice() {
         return unclaimedDeviceList.poll();
     }
-    public ConcurrentLinkedQueue<DeviceInfoEntity> getAllDevice(){
+
+    public ConcurrentLinkedQueue<DeviceInfoEntity> getAllDevice() {
         return unclaimedDeviceList;
     }
-    public int getDeviceNum(){
+
+    public int getDeviceNum() {
         return unclaimedDeviceList.size();
     }
-    public void updateDeviceState(String id, boolean lightState){
-        DeviceInfoEntity targetEntity =  currentDeviceState.get(id);
+
+    public void updateDeviceState(String id, boolean lightState) {
+        DeviceInfoEntity targetEntity = currentDeviceState.get(id);
         LightStateEntity currentState = new LightStateEntity();
         targetEntity.setSwitchState(lightState);
         currentState.setLightState(lightState);
@@ -68,22 +70,24 @@ public class MockCacheData {
         previousStates.add(currentState);
         targetEntity.setStates(previousStates);
         repo.save(targetEntity);
-        
+
     }
-    public void updateIp(String id, String ip){
-        DeviceInfoEntity targetEntity =  currentDeviceState.get(id);
-        if(!ip.equals(targetEntity.getLocalAddress())){
+
+    public void updateIp(String id, String ip) {
+        DeviceInfoEntity targetEntity = currentDeviceState.get(id);
+        if (!ip.equals(targetEntity.getLocalAddress())) {
             targetEntity.setLocalAddress(ip);
             repo.save(targetEntity);
         }
-      
-    }
-    public long getDeviceLastTriggeredTime(String deviceId){
-        return this.lastTriggeredTime.get(deviceId);
-    }
-    public void setDeviceLastTriggeredTime(String deviceId, long updatedTime){
-        this.lastTriggeredTime.put(deviceId, updatedTime);
+
     }
 
+    public long getDeviceLastTriggeredTime(String deviceId) {
+        return this.lastTriggeredTime.get(deviceId);
+    }
+
+    public void setDeviceLastTriggeredTime(String deviceId, long updatedTime) {
+        this.lastTriggeredTime.put(deviceId, updatedTime);
+    }
 
 }
