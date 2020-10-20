@@ -134,7 +134,7 @@ public class BroadcastDeviceDiscovery {
 
     @EventListener
     public void listen(ContextRefreshedEvent event) {
-        for (int i = 2; i < 200; i++) {
+        for (int i = 2; i < 3; i++) {
             try {
                 // taskExecutor.execute(new InnerBroadcastDeviceDiscovery());
                 this.asyncGetDeviceInfo(Integer.toString(i));
