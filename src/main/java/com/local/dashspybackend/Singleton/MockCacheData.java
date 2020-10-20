@@ -52,8 +52,8 @@ public class MockCacheData {
         return unclaimedDeviceList.poll();
     }
 
-    public ConcurrentLinkedQueue<DeviceInfoEntity> getAllDevice() {
-        return unclaimedDeviceList;
+    public DeviceInfoEntity[] getAllDevice() {
+        return unclaimedDeviceList.toArray(new DeviceInfoEntity[unclaimedDeviceList.size()]);
     }
 
     public int getDeviceNum() {
