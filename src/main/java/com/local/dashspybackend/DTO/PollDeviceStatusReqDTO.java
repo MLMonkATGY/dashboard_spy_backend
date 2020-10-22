@@ -1,7 +1,6 @@
 package com.local.dashspybackend.DTO;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 import lombok.Data;
 

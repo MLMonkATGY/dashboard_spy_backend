@@ -1,20 +1,23 @@
 package com.local.dashspybackend.Service;
 
-import java.io.Serializable;
 import java.net.URI;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.local.dashspybackend.DTO.PollDeviceStatusRespDTO;
 import com.local.dashspybackend.DTO.SonoffSwitchReqDTO;
 import com.local.dashspybackend.Entity.DeviceInfoEntity;
+import com.local.dashspybackend.Util.ParseJSON;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.BodyInserters;
@@ -22,24 +25,16 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClient.RequestHeadersSpec;
 
 import lombok.Data;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Service
-
 public class RestService {
-    @Data
-    public class Post implements Serializable {
-
-        private int userId;
-        private int id;
-        private String title;
-        private String body;
-
-        // getters and setters
-    }
 
     private final RestTemplate restTemplate;
+    // @Autowired
+    // private RestTemplateBuilder restTemplateBuilder;
+    @Autowired
+    private ParseJSON parser;
 
     public RestService(RestTemplateBuilder restTemplateBuilder) {
         this.restTemplate = restTemplateBuilder.build();
@@ -74,7 +69,7 @@ public class RestService {
         return response;
     }
 
-    public String sendSwitch(boolean targetState, DeviceInfoEntity entity) {
+    public void sendSwitch(boolean targetState, DeviceInfoEntity entity) {
         SonoffSwitchReqDTO req = new SonoffSwitchReqDTO();
         if (targetState) {
             req.setData(entity.getEncryptedPayloadOn());
@@ -92,9 +87,14 @@ public class RestService {
         RequestHeadersSpec<?> requestSpec2 = WebClient.create().post().uri(URI.create(absUri))
                 .body(BodyInserters.fromValue(req));
 
-        String response = requestSpec2.retrieve().bodyToMono(String.class).block();
+        Mono<String> responseMono = requestSpec2.retrieve().bodyToMono(String.class);
+        responseMono.subscribe(resp -> {
+            PollDeviceStatusRespDTO data = parser.parse(resp, PollDeviceStatusRespDTO.class);
+            System.out.println(data);
 
-        return response;
+        }, err -> {
+            System.err.println("CAUGHT " + err.getMessage());
+        });
     }
 
     public String getPostsPlainJSON() {

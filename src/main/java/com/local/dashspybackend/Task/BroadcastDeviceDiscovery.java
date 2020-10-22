@@ -15,6 +15,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.local.dashspybackend.DTO.BroadcastDiscoveryRespDTO;
 import com.local.dashspybackend.DTO.DeviceInfoCreateReqDTO;
+import com.local.dashspybackend.Entity.LocalDeviceAddressInfoEntity;
+import com.local.dashspybackend.Repository.ILocalDeviceAddressInfoRepo;
 import com.local.dashspybackend.Service.SonoffListenerService;
 import com.local.dashspybackend.Singleton.MockCacheData;
 import com.local.dashspybackend.Util.ParseJSON;
@@ -36,6 +38,7 @@ import org.springframework.messaging.converter.MappingJackson2MessageConverter;
 import org.springframework.messaging.simp.stomp.StompSession;
 import org.springframework.messaging.simp.stomp.StompSessionHandler;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
@@ -61,7 +64,8 @@ public class BroadcastDeviceDiscovery {
 
     @Autowired
     private ObjectMapper modelMapper;
-
+    @Autowired
+    private ILocalDeviceAddressInfoRepo addressInfoRepo;
     @Autowired
     private ParseJSON parser;
     private RestTemplateBuilder aaaaa;
@@ -116,15 +120,18 @@ public class BroadcastDeviceDiscovery {
 
         String url = currentIp + ":" + currentPort;
         try {
-            Mono<String> tweetFlux = WebClient.create()
-
-                    .get().uri(url).accept(MediaType.APPLICATION_JSON).retrieve().bodyToMono(String.class);
+            Mono<String> tweetFlux = WebClient.create().get().uri(url).accept(MediaType.APPLICATION_JSON).retrieve()
+                    .bodyToMono(String.class);
             tweetFlux.subscribe(resp -> {
-                BroadcastDiscoveryRespDTO data = parser.parse(resp, BroadcastDiscoveryRespDTO.class);
-                System.out.println(data);
-
+                BroadcastDiscoveryRespDTO receivedPayload = parser.parse(resp, BroadcastDiscoveryRespDTO.class);
+                System.out.println(receivedPayload);
+                LocalDeviceAddressInfoEntity entity = new LocalDeviceAddressInfoEntity();
+                entity.setBroadcastService(receivedPayload.getBroadcastService());
+                entity.setLocalAddress(receivedPayload.getLocalAddress());
+                entity.setMac(receivedPayload.getDeviceId());
+                addressInfoRepo.save(entity);
             }, err -> {
-                System.err.println("CAUGHT " + err.getMessage());
+                // System.err.println("CAUGHT " + err.getMessage());
             });
 
         } catch (Exception e) {
@@ -132,23 +139,19 @@ public class BroadcastDeviceDiscovery {
         }
     }
 
-    @EventListener
-    public void listen(ContextRefreshedEvent event) {
-        for (int i = 2; i < 3; i++) {
+    @Scheduled(fixedDelay = 1000 * 60 * 3)
+    public void listen() {
+        for (int i = 2; i < 253; i++) {
             try {
                 // taskExecutor.execute(new InnerBroadcastDeviceDiscovery());
                 this.asyncGetDeviceInfo(Integer.toString(i));
-
-                // this.getPostsPlainJSON(Integer.toString(i), this.aaaaa);
-                // testThread();
-                // System.out.println(i);
             } catch (Exception e) {
                 // TODO: handle exception
             }
             System.out.println(i);
 
         }
-        System.out.println("all done");
+        System.out.println("all done discovering");
 
     }
 
