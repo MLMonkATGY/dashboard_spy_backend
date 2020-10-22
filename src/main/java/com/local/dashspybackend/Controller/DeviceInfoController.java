@@ -5,7 +5,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.local.dashspybackend.Service.DeviceInfoService;
 import com.local.dashspybackend.Service.LightStateService;
 import com.local.dashspybackend.Service.RestService;
-import com.local.dashspybackend.Service.RestService.Post;
 
 import org.apache.tomcat.util.codec.binary.Base64;
 import org.modelmapper.ModelMapper;
@@ -36,39 +35,37 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
-
-
 @RestController
 @RequestMapping("/devices")
 public class DeviceInfoController {
-    @Autowired
-    private DeviceInfoService deviceInfoService;
-    @Autowired
-    private LightStateService lightStateService;
-    @Autowired
-    private RestService testService;
-    @Autowired
-    private ModelMapper modelMapper;
-    
-    
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public DeviceInfoCreateResponseDTO getAllDevices(@RequestBody DeviceInfoCreateReqDTO req) {
-      DeviceInfoEntity newData = modelMapper.map(req, DeviceInfoEntity.class);
-		  return deviceInfoService.create(newData);
+  @Autowired
+  private DeviceInfoService deviceInfoService;
+  @Autowired
+  private LightStateService lightStateService;
+  @Autowired
+  private RestService testService;
+  @Autowired
+  private ModelMapper modelMapper;
+
+  @PostMapping
+  @ResponseStatus(HttpStatus.CREATED)
+  public DeviceInfoCreateResponseDTO getAllDevices(@RequestBody DeviceInfoCreateReqDTO req) {
+    DeviceInfoEntity newData = modelMapper.map(req, DeviceInfoEntity.class);
+    return deviceInfoService.create(newData);
   }
+
   @GetMapping(path = "/states")
   public List<LightStateEntity> getAllLightStates() {
     return lightStateService.findAll();
   }
+
   @PostMapping(path = "/switch")
   public DeviceManualToggleRespDTO toggleSwitch(@RequestBody ToggleLightSwitchReqDTO req) {
     DeviceManualToggleRespDTO resp = new DeviceManualToggleRespDTO();
     resp.setReqSuccess(lightStateService.toggleLightSwitchManual(req.getDeviceName()));
     return resp;
   }
-  
-  
+
   @GetMapping("/all")
   public List<GetDeviceInfoDTO> getAllDevices() {
     List<DeviceInfoEntity> allDevice = deviceInfoService.getAllDevice();
@@ -84,5 +81,4 @@ public class DeviceInfoController {
     return resp;
   }
 
- 
 }
