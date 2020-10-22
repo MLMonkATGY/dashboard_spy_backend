@@ -4,7 +4,6 @@ import com.local.dashspybackend.Entity.DeviceInfoEntity;
 import com.local.dashspybackend.Entity.LightStateEntity;
 import com.local.dashspybackend.Exceptions.DeviceExistException;
 import com.local.dashspybackend.Repository.IDeviceInfoRepo;
-import com.local.dashspybackend.Service.RestService.Post;
 import com.local.dashspybackend.DTO.DeviceInfoCreateResponseDTO;
 import com.local.dashspybackend.DTO.ToggleLightSwitchReqDTO;
 import com.local.dashspybackend.DTO.ToggleLightSwitchResponseDTO;
@@ -18,36 +17,35 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
 import java.util.Optional;
+
 @Service
 public class DeviceInfoService {
     @Autowired
     private IDeviceInfoRepo deviceInfoRepo;
-    @Autowired
-    private RestService restService;
 
-    public List<DeviceInfoEntity>findAll(){
-        
+    public List<DeviceInfoEntity> findAll() {
+
         return deviceInfoRepo.findAll();
     }
-    
-    public DeviceInfoCreateResponseDTO create(DeviceInfoEntity reqBody){
+
+    public DeviceInfoCreateResponseDTO create(DeviceInfoEntity reqBody) {
 
         Optional<DeviceInfoEntity> currentRecord = deviceInfoRepo.findById(reqBody.getDeviceId());
-        if(currentRecord.isPresent()){
+        if (currentRecord.isPresent()) {
             throw new DeviceExistException(reqBody.getDeviceId());
         }
         DeviceInfoEntity savedData = deviceInfoRepo.save(reqBody);
 
         return new DeviceInfoCreateResponseDTO(savedData.getDeviceId(), true);
-        
-     
+
     }
-    public String test(){
+
+    public String test() {
         return "";
     }
-    public List<DeviceInfoEntity> getAllDevice(){
+
+    public List<DeviceInfoEntity> getAllDevice() {
         return deviceInfoRepo.findAll();
     }
- 
-    
+
 }

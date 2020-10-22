@@ -11,6 +11,8 @@ import com.local.dashspybackend.DTO.BroadcastDiscoveryRespDTO;
 import com.local.dashspybackend.DTO.DeviceStateReqDTO;
 import com.local.dashspybackend.DTO.PollDeviceStatusReqDTO;
 import com.local.dashspybackend.DTO.PollDeviceStatusRespDTO;
+import com.local.dashspybackend.Entity.LocalDeviceAddressInfoEntity;
+import com.local.dashspybackend.Repository.ILocalDeviceAddressInfoRepo;
 import com.local.dashspybackend.Singleton.MockCacheData;
 import com.local.dashspybackend.Util.ParseJSON;
 
@@ -46,6 +48,8 @@ public class PollDeviceStatus {
     @Autowired
     private MockCacheData dataInfo;
     @Autowired
+    private ILocalDeviceAddressInfoRepo deviceAddressInfoRepo;
+    @Autowired
     private ParseJSON parser;
     private final RestTemplate restTemplate;
 
@@ -60,7 +64,8 @@ public class PollDeviceStatus {
     }
 
     public String createPost(PollDeviceStatusReqDTO req) {
-        String url = "http://localhost:7878/pollStatus";
+        LocalDeviceAddressInfoEntity deviceMapping = deviceAddressInfoRepo.findByBroadcastService("gateway");
+        String url = "http://" + deviceMapping.getLocalAddress() + ":7878/pollStatus";
 
         Mono<String> tweetFlux = WebClient.create().post().uri(url).body(BodyInserters.fromValue(req))
 
@@ -75,7 +80,7 @@ public class PollDeviceStatus {
         return "a";
     }
 
-    @Scheduled(fixedRate = 10000)
+    @Scheduled(fixedRate = 1000)
     public void reportCurrentTime() {
         var allDevice = dataInfo.getAllDevice();
         var resp = new PollDeviceStatusReqDTO();
@@ -90,6 +95,6 @@ public class PollDeviceStatus {
         }
         resp.setDevices(a);
         this.createPost(resp);
-        System.out.println("In here");
+        // System.out.println("In here");
     }
 }
