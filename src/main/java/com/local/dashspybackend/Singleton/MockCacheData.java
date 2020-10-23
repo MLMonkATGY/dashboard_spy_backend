@@ -48,9 +48,9 @@ public class MockCacheData {
 
     }
 
-    public DeviceInfoEntity getDevice() {
-        return unclaimedDeviceList.poll();
-    }
+    // public DeviceInfoEntity getDevice() {
+    // return unclaimedDeviceList.poll();
+    // }
 
     public DeviceInfoEntity[] getAllDevice() {
         return unclaimedDeviceList.toArray(new DeviceInfoEntity[unclaimedDeviceList.size()]);

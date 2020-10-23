@@ -8,5 +8,5 @@ import lombok.Data;
 @Data
 public class PollDeviceStatusRespDTO {
 
-    private ArrayList<DeviceStateRespDTO> devices;
+    private DeviceStateRespDTO[] devices;
 }
