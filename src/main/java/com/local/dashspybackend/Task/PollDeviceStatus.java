@@ -9,6 +9,7 @@ import java.util.List;
 
 import com.local.dashspybackend.DTO.BroadcastDiscoveryRespDTO;
 import com.local.dashspybackend.DTO.DeviceStateReqDTO;
+import com.local.dashspybackend.DTO.DeviceStateRespDTO;
 import com.local.dashspybackend.DTO.PollDeviceStatusReqDTO;
 import com.local.dashspybackend.DTO.PollDeviceStatusRespDTO;
 import com.local.dashspybackend.Entity.LocalDeviceAddressInfoEntity;
@@ -68,11 +69,11 @@ public class PollDeviceStatus {
         String url = "http://" + deviceMapping.getLocalAddress() + ":7878/pollStatus";
 
         Mono<String> tweetFlux = WebClient.create().post().uri(url).body(BodyInserters.fromValue(req))
-
                 .accept(MediaType.APPLICATION_JSON).retrieve().bodyToMono(String.class);
         tweetFlux.subscribe(resp -> {
             PollDeviceStatusRespDTO data = parser.parse(resp, PollDeviceStatusRespDTO.class);
-            System.out.println(data);
+            DeviceStateRespDTO[] allDetectedDevices = data.getDevices();
+            System.out.println(allDetectedDevices[0]);
 
         }, err -> {
             System.err.println("CAUGHT " + err.getMessage());
@@ -80,7 +81,7 @@ public class PollDeviceStatus {
         return "a";
     }
 
-    @Scheduled(fixedRate = 1000)
+    @Scheduled(fixedDelay = 3000)
     public void reportCurrentTime() {
         var allDevice = dataInfo.getAllDevice();
         var resp = new PollDeviceStatusReqDTO();

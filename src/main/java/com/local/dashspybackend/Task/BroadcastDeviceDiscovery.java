@@ -125,11 +125,21 @@ public class BroadcastDeviceDiscovery {
             tweetFlux.subscribe(resp -> {
                 BroadcastDiscoveryRespDTO receivedPayload = parser.parse(resp, BroadcastDiscoveryRespDTO.class);
                 System.out.println(receivedPayload);
-                LocalDeviceAddressInfoEntity entity = new LocalDeviceAddressInfoEntity();
-                entity.setBroadcastService(receivedPayload.getBroadcastService());
-                entity.setLocalAddress(receivedPayload.getLocalAddress());
-                entity.setMac(receivedPayload.getDeviceId());
-                addressInfoRepo.save(entity);
+                LocalDeviceAddressInfoEntity existedMapping = addressInfoRepo
+                        .findByBroadcastService(receivedPayload.getBroadcastService());
+                if (existedMapping != null) {
+                    // existedMapping.setBroadcastService(receivedPayload.getBroadcastService());
+                    existedMapping.setLocalAddress(receivedPayload.getLocalAddress());
+                    existedMapping.setMac(receivedPayload.getDeviceId());
+                    addressInfoRepo.save(existedMapping);
+                } else {
+                    LocalDeviceAddressInfoEntity entity = new LocalDeviceAddressInfoEntity();
+                    entity.setBroadcastService(receivedPayload.getBroadcastService());
+                    entity.setLocalAddress(receivedPayload.getLocalAddress());
+                    entity.setMac(receivedPayload.getDeviceId());
+                    addressInfoRepo.save(entity);
+                }
+
             }, err -> {
                 // System.err.println("CAUGHT " + err.getMessage());
             });
@@ -139,9 +149,9 @@ public class BroadcastDeviceDiscovery {
         }
     }
 
-    @Scheduled(fixedDelay = 1000 * 60 * 3)
+    @Scheduled(fixedDelay = 1000 * 30)
     public void listen() {
-        for (int i = 2; i < 253; i++) {
+        for (int i = 2; i < 50; i++) {
             try {
                 // taskExecutor.execute(new InnerBroadcastDeviceDiscovery());
                 this.asyncGetDeviceInfo(Integer.toString(i));

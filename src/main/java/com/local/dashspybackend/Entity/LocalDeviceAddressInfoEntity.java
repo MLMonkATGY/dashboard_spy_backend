@@ -11,11 +11,11 @@ import lombok.Data;
 @Data
 @Table(name = "local_device_address_info")
 public class LocalDeviceAddressInfoEntity {
-    @Id
     @Column(name = "mac")
     private String mac;
     @Column(name = "local_address")
     private String localAddress;
+    @Id
     @Column(name = "broadcast_service")
     private String broadcastService;
 }
