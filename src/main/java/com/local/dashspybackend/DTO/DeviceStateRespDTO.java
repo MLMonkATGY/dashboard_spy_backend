@@ -9,6 +9,11 @@ public class DeviceStateRespDTO {
     private int rssi;
     private String ssid;
     private String bssid;
-    private String state;
+    private boolean state;
+    private String deviceId;
+    private String localAddress;
 
+    public boolean getState() {
+        return this.state;
+    }
 }

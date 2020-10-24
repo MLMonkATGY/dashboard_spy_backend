@@ -3,7 +3,6 @@ package com.local.dashspybackend;
 import java.util.concurrent.Executor;
 
 import com.local.dashspybackend.Service.SonoffListenerService;
-import com.local.dashspybackend.Service.WebsocketClient;
 
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;

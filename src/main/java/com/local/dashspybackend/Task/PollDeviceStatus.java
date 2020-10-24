@@ -14,6 +14,7 @@ import com.local.dashspybackend.DTO.PollDeviceStatusReqDTO;
 import com.local.dashspybackend.DTO.PollDeviceStatusRespDTO;
 import com.local.dashspybackend.Entity.LocalDeviceAddressInfoEntity;
 import com.local.dashspybackend.Repository.ILocalDeviceAddressInfoRepo;
+import com.local.dashspybackend.Service.ToggleSonoffSwitchService;
 import com.local.dashspybackend.Singleton.MockCacheData;
 import com.local.dashspybackend.Util.ParseJSON;
 
@@ -47,11 +48,13 @@ import org.springframework.web.reactive.function.client.WebClient.RequestHeaders
 @Component
 public class PollDeviceStatus {
     @Autowired
-    private MockCacheData dataInfo;
+    private MockCacheData mockCacheData;
     @Autowired
     private ILocalDeviceAddressInfoRepo deviceAddressInfoRepo;
     @Autowired
     private ParseJSON parser;
+    @Autowired
+    private ToggleSonoffSwitchService toggleSonoffSwitchService;
     private final RestTemplate restTemplate;
 
     public PollDeviceStatus(RestTemplateBuilder restTemplateBuilder) {
@@ -66,6 +69,10 @@ public class PollDeviceStatus {
 
     public String createPost(PollDeviceStatusReqDTO req) {
         LocalDeviceAddressInfoEntity deviceMapping = deviceAddressInfoRepo.findByBroadcastService("gateway");
+        if (deviceMapping == null) {
+            return "a";
+
+        }
         String url = "http://" + deviceMapping.getLocalAddress() + ":7878/pollStatus";
 
         Mono<String> tweetFlux = WebClient.create().post().uri(url).body(BodyInserters.fromValue(req))
@@ -73,7 +80,11 @@ public class PollDeviceStatus {
         tweetFlux.subscribe(resp -> {
             PollDeviceStatusRespDTO data = parser.parse(resp, PollDeviceStatusRespDTO.class);
             DeviceStateRespDTO[] allDetectedDevices = data.getDevices();
-            System.out.println(allDetectedDevices[0]);
+            for (DeviceStateRespDTO connectedDevice : allDetectedDevices) {
+                mockCacheData.updateDeviceState(connectedDevice.getDeviceId(), connectedDevice.getState());
+                mockCacheData.updateIp(connectedDevice.getDeviceId(), connectedDevice.getLocalAddress());
+
+            }
 
         }, err -> {
             System.err.println("CAUGHT " + err.getMessage());
@@ -81,9 +92,9 @@ public class PollDeviceStatus {
         return "a";
     }
 
-    @Scheduled(fixedDelay = 3000)
+    @Scheduled(fixedDelay = 4000)
     public void reportCurrentTime() {
-        var allDevice = dataInfo.getAllDevice();
+        var allDevice = mockCacheData.getAllDevice();
         var resp = new PollDeviceStatusReqDTO();
         ArrayList<DeviceStateReqDTO> a = new ArrayList<DeviceStateReqDTO>();
         // resp.setDevices();
@@ -96,6 +107,7 @@ public class PollDeviceStatus {
         }
         resp.setDevices(a);
         this.createPost(resp);
+        toggleSonoffSwitchService.toggleSwitch(100);
         // System.out.println("In here");
     }
 }
