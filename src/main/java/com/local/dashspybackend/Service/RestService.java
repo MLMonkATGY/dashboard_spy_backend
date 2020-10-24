@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.local.dashspybackend.DTO.EdgeDeviceResponseDTO;
 import com.local.dashspybackend.DTO.PollDeviceStatusRespDTO;
 import com.local.dashspybackend.DTO.SonoffSwitchReqDTO;
 import com.local.dashspybackend.Entity.DeviceInfoEntity;
@@ -89,7 +90,7 @@ public class RestService {
 
         Mono<String> responseMono = requestSpec2.retrieve().bodyToMono(String.class);
         responseMono.subscribe(resp -> {
-            PollDeviceStatusRespDTO data = parser.parse(resp, PollDeviceStatusRespDTO.class);
+            EdgeDeviceResponseDTO data = parser.parse(resp, EdgeDeviceResponseDTO.class);
             System.out.println(data);
 
         }, err -> {

@@ -23,12 +23,12 @@ import org.springframework.web.socket.messaging.WebSocketStompClient;
 
 @Component
 public class SonoffListenerService {
-    
+
     @Autowired
     private MockCacheData dataSource;
     @Autowired
     private RestService senderService;
-   
+
     public void parser(String rawInput) {
         if (rawInput.contains(":")) {
             String[] updateData = rawInput.split(":");
@@ -48,24 +48,16 @@ public class SonoffListenerService {
     }
 
     public String initDeviceInfoForListener() {
-        var allDevice = dataSource.getAllDevice();    
-            String deviceInfoCliInput = "--";
-            for (DeviceInfoEntity device_info : allDevice) {
-                deviceInfoCliInput =  deviceInfoCliInput + device_info.getDeviceId() + ":" + device_info.getApiKey()+ "*";
-            }
-            String json = String.format("\'%s\'", deviceInfoCliInput);
-            json = json.replaceAll("\\n+", "");
-            String pythonPath = "py";
-            String pPath = "C:\\Program Files\\WindowsApps\\PythonSoftwareFoundation.Python.3.8_3.8.1776.0_x64__qbz5n2kfra8p0\\python3.8.exe";
-            return json;
+        var allDevice = dataSource.getAllDevice();
+        String deviceInfoCliInput = "--";
+        for (DeviceInfoEntity device_info : allDevice) {
+            deviceInfoCliInput = deviceInfoCliInput + device_info.getDeviceId() + ":" + device_info.getApiKey() + "*";
+        }
+        String json = String.format("\'%s\'", deviceInfoCliInput);
+        json = json.replaceAll("\\n+", "");
+        String pythonPath = "py";
+        String pPath = "C:\\Program Files\\WindowsApps\\PythonSoftwareFoundation.Python.3.8_3.8.1776.0_x64__qbz5n2kfra8p0\\python3.8.exe";
+        return json;
     }
 
-    // public void listen(){
-
-    // }
-    // @Override
-    // public void run() {
-    //     System.out.println("Not implemented");
-    //     // listen();
-    // }
 }
