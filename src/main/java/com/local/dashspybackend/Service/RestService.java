@@ -32,8 +32,7 @@ import reactor.core.publisher.Mono;
 public class RestService {
 
     private final RestTemplate restTemplate;
-    // @Autowired
-    // private RestTemplateBuilder restTemplateBuilder;
+
     @Autowired
     private ParseJSON parser;
 

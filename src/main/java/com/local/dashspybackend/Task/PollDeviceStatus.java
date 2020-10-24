@@ -107,7 +107,6 @@ public class PollDeviceStatus {
         }
         resp.setDevices(a);
         this.createPost(resp);
-        toggleSonoffSwitchService.toggleSwitch(100);
         // System.out.println("In here");
     }
 }
