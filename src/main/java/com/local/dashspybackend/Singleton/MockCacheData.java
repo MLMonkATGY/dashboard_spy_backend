@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -61,7 +62,10 @@ public class MockCacheData {
     }
 
     public void updateDeviceState(String id, boolean lightState) {
-        DeviceInfoEntity targetEntity = currentDeviceState.get(id);
+        DeviceInfoEntity targetEntity = this.repo.findById(id).get();
+        if (targetEntity.getSwitchState() == lightState) {
+            return;
+        }
         LightStateEntity currentState = new LightStateEntity();
         targetEntity.setSwitchState(lightState);
         currentState.setLightState(lightState);
@@ -74,7 +78,7 @@ public class MockCacheData {
     }
 
     public void updateIp(String id, String ip) {
-        DeviceInfoEntity targetEntity = currentDeviceState.get(id);
+        DeviceInfoEntity targetEntity = this.repo.findById(id).get();
         if (!ip.equals(targetEntity.getLocalAddress())) {
             targetEntity.setLocalAddress(ip);
             repo.save(targetEntity);
