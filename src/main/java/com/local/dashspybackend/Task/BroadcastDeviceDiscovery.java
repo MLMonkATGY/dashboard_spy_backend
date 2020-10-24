@@ -158,7 +158,6 @@ public class BroadcastDeviceDiscovery {
             } catch (Exception e) {
                 // TODO: handle exception
             }
-            System.out.println(i);
 
         }
         System.out.println("all done discovering");

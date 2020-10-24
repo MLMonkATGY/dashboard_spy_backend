@@ -41,6 +41,8 @@ public class ToggleSonoffSwitchService {
         } else if (batteryLevel > 99) {
             this.sendSwitch(false, targetDevice);
 
+        } else if (batteryLevel >= 25 && batteryLevel <= 99) {
+            this.sendSwitch(false, targetDevice);
         }
     }
 
